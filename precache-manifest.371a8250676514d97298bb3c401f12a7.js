@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "beba8fd6bca19ccab008e4e1d03e44ce",
+    "revision": "290e48557561873104f560525c7c1e97",
     "url": "/vcwebfix/index.html"
   },
   {
-    "revision": "088332d7c3d84e77a736",
+    "revision": "fb9d3bce915689440e2c",
     "url": "/vcwebfix/static/css/main.0576891f.chunk.css"
   },
   {
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/vcwebfix/static/js/2.46948708.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "088332d7c3d84e77a736",
-    "url": "/vcwebfix/static/js/main.1235a5bb.chunk.js"
+    "revision": "fb9d3bce915689440e2c",
+    "url": "/vcwebfix/static/js/main.83f195a1.chunk.js"
   },
   {
     "revision": "9d11da03a8a55f82ed2b",
