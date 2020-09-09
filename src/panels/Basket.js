@@ -147,9 +147,7 @@ const Basket = ({
           <Checkbox
             checked={faster}
             onToggle={() => {
-              if (faster) {
-                setFaster(false);
-              } else {
+              if (!faster) {
                 setTime("");
                 setFaster(true);
               }
