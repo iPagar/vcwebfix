@@ -1,38 +1,98 @@
-import React, { useMemo, useState } from 'react';
-import { withRouter, Link } from 'react-router-dom';
-import accounting from 'accounting';
+import React, { useMemo, useState, useEffect } from "react";
+import { withRouter, Link } from "react-router-dom";
+import accounting from "accounting";
 
-import Checkbox from './Checkbox';
+import Checkbox from "./Checkbox";
 
-import edit from '../img/edit.svg';
-import './place.css';
+import edit from "../img/edit.svg";
+import "./place.css";
 
+let lastVal = "";
+const isValid = (val) => {
+  const regexp = /^\d{0,2}?:?\d{0,2}$/;
 
-const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order }) => {
-  const [ faster, setFaster ] = useState(true);
-  const [ time, setTime ] = useState('');
-  const [ selfService, setSelfService ] = useState(false);
-  const area = foodAreas.filter(area => area.id === areaId)[0];
-  const item = area.items.filter(item => item.id === itemId)[0];
+  const [hoursStr, minutesStr] = val.split(":");
 
-  const [ price, products ] = useMemo(() => {
-    const foodIds = new Set((item.foods || []).map(item => item.id));
+  if (!regexp.test(val)) {
+    return false;
+  }
 
-    const products = Object.values(order)
-      .filter((value) => {
-        const { item: { id }} = value;
+  const hours = Number(hoursStr);
+  const minutes = Number(minutesStr);
 
-        return foodIds.has(id);
-      });
+  const isValidHour = (hour) =>
+    Number.isInteger(hour) && hour >= 0 && hour < 24;
+  const isValidMinutes = (minutes) =>
+    (Number.isInteger(minutes) && hours >= 0 && hours < 24) ||
+    Number.isNaN(minutes);
+  if (!isValidHour(hours) || !isValidMinutes(minutes)) {
+    return false;
+  }
+
+  if (minutes < 10 && Number(minutesStr[0]) > 5) {
+    return false;
+  }
+
+  const valArr = val.indexOf(":") !== -1 ? val.split(":") : [val];
+
+  // check mm and HH
+  if (
+    valArr[0] &&
+    valArr[0].length &&
+    (parseInt(valArr[0], 10) < 0 || parseInt(valArr[0], 10) > 23)
+  ) {
+    return false;
+  }
+
+  if (
+    valArr[1] &&
+    valArr[1].length &&
+    (parseInt(valArr[1], 10) < 0 || parseInt(valArr[1], 10) > 59)
+  ) {
+    return false;
+  }
+
+  return true;
+};
+
+const Basket = ({
+  match: {
+    params: { areaId, itemId },
+  },
+  foodAreas,
+  order,
+  settings,
+  setSettings,
+}) => {
+  const [faster, setFaster] = useState(settings.faster || false);
+  const [time, setTime] = useState(settings.time || "");
+  const [selfService, setSelfService] = useState(settings.selfService || false);
+  const area = foodAreas.filter((area) => area.id === areaId)[0];
+  const item = area.items.filter((item) => item.id === itemId)[0];
+
+  const [price, products] = useMemo(() => {
+    const foodIds = new Set((item.foods || []).map((item) => item.id));
+
+    const products = Object.values(order).filter((value) => {
+      const {
+        item: { id },
+      } = value;
+
+      return foodIds.has(id);
+    });
 
     const result = products.reduce((result, value) => {
-        const { count, item } = value;
+      const { count, item } = value;
 
-        return result + parseInt(item.price) * parseInt(count);
-      }, 0);
+      return result + parseInt(item.price) * parseInt(count);
+    }, 0);
 
-    return [ accounting.formatNumber(result, 0, ' '), products ];
-  }, [ order, item ]);
+    return [accounting.formatNumber(result, 0, " "), products];
+  }, [order, item]);
+
+  useEffect(() => {
+    setSettings(faster, time, selfService);
+  }, [faster, time, selfService]);
 
   return (
     <div className="Place">
@@ -44,10 +104,7 @@ const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order }) => {
             </Link>
           </h1>
           <Link to="/edit" className="Place__change-tz">
-            <img
-              alt="change-profile"
-              src={edit}
-            />
+            <img alt="change-profile" src={edit} />
           </Link>
         </aside>
       </header>
@@ -57,44 +114,24 @@ const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order }) => {
           alt="Fastfood logo"
           src={item.image}
         />
-        <h2
-          className="Place__restoraunt-name"
-        >
-          {item.name}
-        </h2>
-        <p className="Place__restoraunt-type">
-          {item.description}
-        </p>
+        <h2 className="Place__restoraunt-name">{item.name}</h2>
+        <p className="Place__restoraunt-type">{item.description}</p>
       </aside>
       <div className="Place__products-wrapper">
         <ul className="Place__products">
-          {products.map(({ item, count }) => (
-            <li
-              className="Place__product"
-              key={item.id}
-            >
-              <img
-                className="Place__product-logo"
-                alt="Ordered product logo"
-                src={item.image}
-              />
-              <h3
-                className="Place__product-name"
-              >
-                {item.name}
-              </h3>
-              <p
-                className="Place__product-price"
-              >
-                Цена: {item.price}
-              </p>
-              <p
-                className="Place__product-count"
-              >
-                x{count}
-              </p>
-            </li>
-          ))}
+          {(products.length &&
+            products.map(({ item, count }) => (
+              <li className="Place__product" key={item.id}>
+                <img
+                  className="Place__product-logo"
+                  alt="Ordered product logo"
+                  src={item.image}
+                />
+                <h3 className="Place__product-name">{item.name}</h3>
+                <p className="Place__product-price">Цена: {item.price}</p>
+                <p className="Place__product-count">x{count}</p>
+              </li>
+            ))) || <h3>Продуктов не выбрано</h3>}
         </ul>
         <Link
           className="Place__change-product"
@@ -107,13 +144,13 @@ const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order }) => {
         <h3>Время:</h3>
         <div className="Place__choice-item">
           <span>Как можно быстрее</span>
-          <Checkbox 
-            checked={faster} 
+          <Checkbox
+            checked={faster}
             onToggle={() => {
               if (faster) {
                 setFaster(false);
               } else {
-                setTime('');
+                setTime("");
                 setFaster(true);
               }
             }}
@@ -126,28 +163,69 @@ const Basket = ({ match: { params: { areaId, itemId }}, foodAreas, order }) => {
             onFocus={() => {
               setFaster(false);
             }}
-            onChange={event => {
+            onChange={(event) => {
               setFaster(false);
-              setTime(event.target.value);
-            }}
-            onBlur={() => {
-              if (time) {
-                setFaster(false);
+
+              let val = event.target.value;
+
+              if (isValid(val)) {
+                if (
+                  val.length === 2 &&
+                  lastVal.length !== 3 &&
+                  val.indexOf(":") === -1
+                ) {
+                  val = val + ":";
+                }
+
+                if (val.length === 2 && lastVal.length === 3) {
+                  val = val.slice(0, 1);
+                }
+
+                if (val.length > 5) {
+                  return false;
+                }
+
+                lastVal = val;
+
+                setTime(val);
+
+                if (val.length === 5) {
+                  setTime(val);
+                }
               }
             }}
+            onBlur={() => {
+              if (time.length === 5) {
+                setFaster(false);
+              } else {
+                setTime("");
+                setFaster(true);
+              }
+            }}
+            maxLength={5}
           />
         </div>
         <div className="Place__choice-item">
           <h3>С собой</h3>
-          <Checkbox checked={selfService} onToggle={() => setSelfService(!selfService)} />
+          <Checkbox
+            checked={selfService}
+            onToggle={() => setSelfService(!selfService)}
+          />
         </div>
         <div className="Place__choice-item">
           <h3>На месте</h3>
-          <Checkbox checked={!selfService} onToggle={() => setSelfService(!setSelfService)} />
+          <Checkbox
+            checked={!selfService}
+            onToggle={() => setSelfService(!selfService)}
+          />
         </div>
       </div>
       <footer className="Place__footer">
-        <Link to={`/order/${area.id}/${item.id}`} className="Place__order">
+        <Link
+          to={`/order/${area.id}/${item.id}`}
+          className={`Place__order ${!products.length &&
+            "Place__order__disabled"}`}
+        >
           Оплатить {price}
         </Link>
       </footer>

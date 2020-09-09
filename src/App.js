@@ -36,7 +36,7 @@ const FOOD_AREAS = [
 						price: 150,
 					},
 					{
-						id: "bigmac",
+						id: "fries",
 						image: OneTowar,
 						name: "Картофель фри",
 						price: 50,
@@ -151,6 +151,9 @@ const App = () => {
 	const [order, setOrder] = useState(
 		JSON.parse(localStorage.getItem("orders") || "null") || {}
 	);
+	const [settings, setSettings] = useState(
+		JSON.parse(localStorage.getItem("settings") || "null") || {}
+	);
 
 	return (
 		<Router>
@@ -176,7 +179,24 @@ const App = () => {
 					/>
 				</Route>
 				<Route path="/basket/:areaId/:itemId" exact>
-					<Basket foodAreas={FOOD_AREAS} order={order} />
+					<Basket
+						foodAreas={FOOD_AREAS}
+						order={order}
+						settings={settings}
+						setSettings={(faster, time, selfService) => {
+							const nextSettings = {
+								faster,
+								time,
+								selfService,
+							};
+
+							localStorage.setItem(
+								"settings",
+								JSON.stringify(nextSettings)
+							);
+							setSettings(nextSettings);
+						}}
+					/>
 				</Route>
 				<Route path="/orders" exact>
 					<Orders
@@ -328,6 +348,7 @@ const App = () => {
 							/>
 						);
 					}}
+					exact
 				/>
 			</Switch>
 		</Router>
